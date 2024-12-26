@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Management</title>
+    <script src="config.js"></script>
+</head>
+
+<body>
+    <form id="addQuestionsForm">
+        <h2>Add a New Question</h2>
+        <input type="text" id="title" placeholder="Add a new question" required />
+        <input type="text" id="optionA" placeholder="Option A" required />
+        <input type="text" id="optionB" placeholder="Option B" required />
+        <input type="text" id="optionC" placeholder="Option C" required />
+        <input type="text" id="optionD" placeholder="Option D" required />
+        <select id="correctOption">
+            <option value="A"></option>
+            <option value="A"></option>
+            <option value="A"></option>
+            <option value="A"></option>
+
+        </select>
+        <button type="submit">Add Question </button>
+    </form>
+    <h2>All Questions</h2>
+    <div id="questionContainer">
+
+    </div>
+</body>
+<script>
+    fetch('navbar.html').then(response=> response.text()).then(data=>{
+        document.body.insertAdjacentHTML('afterbegin', data);
+    });
+
+    //Backend interaction logic
+    const renderQuestions=async()=>{
+        const reponse=await fetch(baseURL);
+        const questions= await reponse.json();
+        const container=document.getElementById('questionsContainer');
+        container.innerHTML=questions.map(question=>`
+        <div style=border:2px solid ${question.reviewStatus?'violet':'blue'};margin:10px;
+        padding:10px;">
+        <h4>${question.title}</h4>
+        <p>A:${question.optionA} </p>
+        <p>B:${question.optionB} </p>
+        <p>C:${question.optionC} </p>
+        <p>D:${question.optionD} </p>
+        <p><strong>Correct Answer:</strong>${question.correctOption}</p>
+        <button onclick="reviewQuestion(${question.id})">Review Question</button>
+        <button onclick="deleteQuestion(${question.id})">Delete Question</button>
+        </div>
+        `).join('');
+    };
+    document.getElementById('addQuestionForm').addEventListener('submit',async function (e) {
+        e.preventDefault();
+        const newQuestion={
+            title:document.getElementById('title').value,
+            optionA:document.getElementById('optionA').value,
+            optionB:document.getElementById('optionB').value,
+            optionC:document.getElementById('optionC').value,
+            optionD:document.getElementById('optionD').value,
+            correctOption:document.getElementById('correctOption').value,
+            reviewStatus:false
+        };
+        await fetch(baseURL,{
+            method:'POST',
+            headers:{'Content-Type':'Application/json'},
+            body: JSON.stringify(newQuestion)
+        });
+        alert('Question Created');
+        renderQuestions();
+    });
+    const reviewQuestion=async (id)=>{
+        if(confirm('Are you sure to review this question?')){
+            await fetch(`${baseURL}/${id}`,{
+                method:'PATCH',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({reviewStatus:true})
+            });
+            renderQuestions();
+        }
+    };
+    const deleteQuestion=async(id)=>{
+        id(confirm('Are you sure to delete this question?')){
+            await fetch(`${baseURL}/${id}`,{method:'DELETE'});
+        }
+    };
+    renderQuestions();
+</script>
+
+</html>
